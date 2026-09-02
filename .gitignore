@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+ENV/
+
+# IDE / OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Project generated outputs
+outputs/
+*.log
+
+# Local environment files
+.env
+.env.*

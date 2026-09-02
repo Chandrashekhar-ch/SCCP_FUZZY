@@ -1,0 +1,111 @@
+# ============================================================
+#  Water FIS — Project Configuration
+#  Author : SC_CProject
+#  Standard: WHO Guidelines for Drinking-Water Quality (2022)
+#             BIS IS 10500:2012
+# ============================================================
+
+project:
+  name: "Water Potability FIS"
+  version: "1.0.0"
+  description: "Mamdani Fuzzy Inference System for real-time water potability classification"
+
+# ---- Sensor universe of discourse (physical measurement ranges) ----
+sensors:
+  ph:
+    min: 0.0
+    max: 14.0
+    unit: "pH"
+    who_safe_low: 6.5
+    who_safe_high: 8.5
+    sampling_rate_hz: 1
+
+  turbidity:
+    min: 0.0
+    max: 100.0
+    unit: "NTU"
+    who_limit: 1.0          # WHO ideal
+    bis_limit: 5.0          # BIS IS 10500 permissible
+    sampling_rate_hz: 1
+
+  tds:
+    min: 0.0
+    max: 1500.0
+    unit: "mg/L"
+    bis_desirable: 500.0
+    bis_permissible: 2000.0
+    sampling_rate_hz: 1
+
+  do:
+    min: 0.0
+    max: 20.0
+    unit: "mg/L"
+    recommended_min: 6.0    # Aquatic health standard
+    sampling_rate_hz: 1
+
+  temperature:
+    min: 0.0
+    max: 50.0
+    unit: "°C"
+    role: "compensator"     # Used only for calibration correction
+
+# ---- FIS Output ----
+output:
+  name: "Water Potability Index"
+  abbreviation: "WPI"
+  min: 0.0
+  max: 10.0
+  classes:
+    non_potable:
+      range: [0.0, 3.5]
+      label: "NON-POTABLE"
+      color: "#EF4444"
+      description: "Unsafe — Do not consume. Immediate remediation required."
+    marginal:
+      range: [3.5, 6.5]
+      label: "MARGINAL"
+      color: "#F59E0B"
+      description: "Caution — Water treatment strongly recommended before use."
+    potable:
+      range: [6.5, 10.0]
+      label: "POTABLE"
+      color: "#22C55E"
+      description: "Safe — Meets WHO/BIS drinking water standards."
+
+# ---- FIS Parameters ----
+fis:
+  type: "Mamdani"
+  implication: "min"
+  aggregation: "max"
+  defuzzification: "centroid"
+  discretization_points: 1000   # Resolution for defuzzification integral
+
+# ---- Data Processing ----
+preprocessing:
+  moving_average_window: 10     # Samples for noise smoothing
+  noise_sigma_percent: 3.0      # Simulated sensor noise (% of range)
+  calibration_enabled: true
+
+# ---- Dataset Generation ----
+dataset:
+  n_samples: 5000
+  class_distribution:
+    potable: 0.40
+    marginal: 0.35
+    non_potable: 0.25
+  random_seed: 42
+  output_path: "outputs/synthetic_dataset.csv"
+
+# ---- Dashboard / Server ----
+dashboard:
+  host: "127.0.0.1"
+  port: 5050
+  update_interval_ms: 1000      # WebSocket push rate
+  history_points: 60            # Seconds of history shown
+  simulation_mode: true         # true = synthetic stream, false = serial port
+
+# ---- Hardware (Optional) ----
+hardware:
+  serial_port: "COM3"           # Change to actual port
+  baud_rate: 115200
+  timeout_seconds: 2

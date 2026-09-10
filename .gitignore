@@ -19,3 +19,6 @@ outputs/
 # Local environment files
 .env
 .env.*
+
+# Local scratch downloads (Kaggle dataset copy + repo clone), not project source
+downloaded_data/

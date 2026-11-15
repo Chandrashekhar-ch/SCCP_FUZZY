@@ -27,7 +27,9 @@ def calculate_traditional_wqi(row) -> float:
         
         # Calculate Quality Rating (qi)
         if param == 'ph':
-            qi = 100 * ((val - vio) / (sn - vio))
+            qi = 100 * (abs(val - vio) / abs(sn - vio))
+        elif param == 'do':
+            qi = 100 * (abs(val - vio) / abs(sn - vio))
         else:
             qi = 100 * (val / sn)
         

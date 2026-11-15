@@ -47,6 +47,8 @@ class SyntheticStream:
     _tick = 0
     _scenario_timer = 0
     _scenario = "normal"
+    _real_df = None
+    _real_idx = 0
 
     BOUNDS = {
         "ph": (0., 14.), "turbidity": (0., 100.),
@@ -60,23 +62,48 @@ class SyntheticStream:
     # Scenario presets for demo variety
     SCENARIOS = {
         "normal":      {"ph":7.1, "turbidity":1.0, "tds":320., "do":8.5,  "temperature":25.},
+        "potable":     {"ph":7.0, "turbidity":0.5, "tds":280., "do":9.0,  "temperature":23.},
         "acidic":      {"ph":4.8, "turbidity":5.0, "tds":450., "do":7.0,  "temperature":27.},
         "turbid":      {"ph":7.2, "turbidity":65., "tds":500., "do":6.5,  "temperature":26.},
-        "contaminated":{"ph":5.2, "turbidity":55., "tds":900., "do":2.0,  "temperature":30.},
         "hard_water":  {"ph":8.8, "turbidity":2.0, "tds":750., "do":7.2,  "temperature":24.},
-        "potable":     {"ph":7.0, "turbidity":0.5, "tds":280., "do":9.0,  "temperature":23.},
+        "contaminated":{"ph":5.2, "turbidity":55., "tds":900., "do":2.0,  "temperature":30.},
     }
+
+    @classmethod
+    def load_real_data(cls):
+        path = "outputs/unified_multisensor_water_dataset.csv"
+        if os.path.exists(path) and cls._real_df is None:
+            try:
+                import pandas as pd
+                cls._real_df = pd.read_csv(path)
+                cls._real_idx = 0
+            except Exception:
+                pass
 
     @classmethod
     def next(cls) -> dict:
         cls._tick += 1
         cls._scenario_timer += 1
 
+        # Real field dataset playback mode
+        if cls._scenario == "real_stream":
+            cls.load_real_data()
+            if cls._real_df is not None and len(cls._real_df) > 0:
+                row = cls._real_df.iloc[cls._real_idx]
+                cls._real_idx = (cls._real_idx + 1) % len(cls._real_df)
+                return {
+                    "ph": float(row["ph"]),
+                    "turbidity": float(row["turbidity"]),
+                    "tds": float(row["tds"]),
+                    "do": float(row["do"]),
+                    "temperature": float(row.get("temperature", 25.0)),
+                }
+
         # Rotate scenario every ~45 seconds for demo
         if cls._scenario_timer >= 45:
             cls._scenario_timer = 0
             keys = list(cls.SCENARIOS.keys())
-            idx  = keys.index(cls._scenario)
+            idx  = keys.index(cls._scenario) if cls._scenario in keys else 0
             cls._scenario = keys[(idx + 1) % len(keys)]
             cls._targets  = dict(cls.SCENARIOS[cls._scenario])
 

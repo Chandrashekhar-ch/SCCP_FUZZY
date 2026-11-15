@@ -130,14 +130,53 @@ def run_rule_summary():
     summarise_rule_base()
 
 
+def run_ablation():
+    """Run sensor ablation and safety hazard analysis."""
+    from water_fis.validation.ablation_study import run_ablation_study
+    run_ablation_study()
+
+
+def run_sensitivity():
+    """Run noise sensitivity and graceful degradation analysis."""
+    from water_fis.validation.sensitivity_analysis import run_sensitivity_analysis
+    run_sensitivity_analysis()
+
+
+def run_wqi():
+    """Run traditional WQI vs proposed Mamdani FIS comparison."""
+    from water_fis.validation.wqi_benchmark import run_wqi_comparison
+    run_wqi_comparison()
+
+
+def run_profile():
+    """Run edge computational latency and memory profiling."""
+    from water_fis.validation.edge_profiler import profile_models
+    profile_models()
+
+
+def run_all_experiments():
+    """Run all extended research experiments (ablation, sensitivity, WQI, profiler)."""
+    print("\n[+] Executing Full Research Experiment Suite...")
+    run_ablation()
+    run_sensitivity()
+    run_wqi()
+    run_profile()
+    print("\n[+] All extended research experiments completed! Figures & JSON data in outputs/")
+
+
 # ── CLI dispatch ───────────────────────────────────────────────────
 COMMANDS = {
-    "simulate": (run_simulate,   "Launch real-time dashboard (simulation mode)"),
-    "demo":     (run_demo,       "Run FIS inference on test cases"),
-    "validate": (run_validate,   "Generate dataset + run full benchmark"),
-    "kaggle":   (run_kaggle,     "Benchmark against real-world Kaggle dataset"),
-    "mf":       (run_mf_check,   "Membership function sanity check"),
-    "rules":    (run_rule_summary,"Print rule base summary"),
+    "simulate":    (run_simulate,        "Launch real-time dashboard (simulation mode)"),
+    "demo":        (run_demo,            "Run FIS inference on test cases"),
+    "validate":    (run_validate,        "Generate dataset + run full benchmark"),
+    "kaggle":      (run_kaggle,          "Benchmark against real-world Kaggle dataset"),
+    "mf":          (run_mf_check,        "Membership function sanity check"),
+    "rules":       (run_rule_summary,    "Print rule base summary"),
+    "ablation":    (run_ablation,        "Sensor ablation & safety hazard analysis"),
+    "sensitivity": (run_sensitivity,     "Noise sensitivity & graceful degradation study"),
+    "wqi":         (run_wqi,             "Traditional WQI vs proposed FIS comparison"),
+    "profile":     (run_profile,         "Edge computational latency & profiling"),
+    "experiments": (run_all_experiments,"Run complete suite of extended research experiments"),
 }
 
 def print_help():

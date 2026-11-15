@@ -154,6 +154,14 @@ def run_profile():
     profile_models()
 
 
+def run_dataset():
+    """Inspect and build the unified real-world multi-sensor benchmark dataset."""
+    from water_fis.data.build_unified_dataset import inspect_all_datasets, build_unified_multisensor_dataset, export_extended_smart_dataset
+    inspect_all_datasets()
+    build_unified_multisensor_dataset()
+    export_extended_smart_dataset()
+
+
 def run_all_experiments():
     """Run all extended research experiments (ablation, sensitivity, WQI, profiler)."""
     print("\n[+] Executing Full Research Experiment Suite...")
@@ -170,6 +178,7 @@ COMMANDS = {
     "demo":        (run_demo,            "Run FIS inference on test cases"),
     "validate":    (run_validate,        "Generate dataset + run full benchmark"),
     "kaggle":      (run_kaggle,          "Benchmark against real-world Kaggle dataset"),
+    "dataset":     (run_dataset,         "Build unified real-world multi-sensor dataset"),
     "mf":          (run_mf_check,        "Membership function sanity check"),
     "rules":       (run_rule_summary,    "Print rule base summary"),
     "ablation":    (run_ablation,        "Sensor ablation & safety hazard analysis"),

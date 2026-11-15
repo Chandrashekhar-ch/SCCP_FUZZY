@@ -131,3 +131,4 @@ def profile_models(csv_path: str = "outputs/synthetic_dataset.csv",
 
 if __name__ == "__main__":
     profile_models()
+

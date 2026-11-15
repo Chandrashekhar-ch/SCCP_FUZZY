@@ -141,3 +141,4 @@ def run_ablation_study(csv_path: str = "outputs/synthetic_dataset.csv",
 
 if __name__ == "__main__":
     run_ablation_study()
+

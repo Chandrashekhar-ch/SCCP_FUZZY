@@ -144,3 +144,4 @@ def run_wqi_comparison(csv_path: str = "outputs/synthetic_dataset.csv",
 
 if __name__ == "__main__":
     run_wqi_comparison()
+

@@ -139,3 +139,4 @@ When presenting this project for academic evaluation, final year thesis, or conf
    * Traditional WQI Eclipsing Comparison ([fis_vs_wqi.png](file:///d:/Projects_D/TY_D/SC/SC_CProject/outputs/figures/fis_vs_wqi.png)).
 6. **Real-Time Dashboard & Telemetry**: Screenshots of the web dashboard with the WPI arc gauge, active rules, and sensor trends.
 7. **Conclusion & Future Scope**: Solar-powered remote node deployment, LoRaWAN long-range telemetry, and adaptive neuro-fuzzy (ANFIS) tuning.
+

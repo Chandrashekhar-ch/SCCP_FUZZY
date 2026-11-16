@@ -252,11 +252,111 @@ def generate_document():
     add_heading(doc, "4. Mamdani Fuzzy Inference System Design", level=1)
     add_paragraph(doc,
         "The inference engine maps the preprocessed crisp inputs through a four-stage Mamdani architecture: Fuzzification, Rule Evaluation, "
-        "Implication/Aggregation, and Defuzzification."
+        "Implication/Aggregation, and Defuzzification. Fuzzification transforms crisp physical measurements into degrees of membership "
+        "μ ∈ [0.0, 1.0] across piecewise linear triangular and trapezoidal distributions."
     )
 
     add_figure(doc, "mf_ph.png", "Triangular and Trapezoidal Membership Functions for the pH Input Domain.")
 
+    # 4.1 Fuzzification Sets & Coordinates Tables
+    add_heading(doc, "4.1 Fuzzification Sets & Parameter Specifications", level=2)
+    add_paragraph(doc,
+        "The fuzzification layer implements 17 input fuzzy sets across the four sensor parameters and 3 output fuzzy sets for the Water Potability "
+        "Index (WPI). The mathematical definitions, geometric coordinates [a, b, c, d], and regulatory grounding are summarized in the tables below:"
+    )
+
+    # Table: pH Sets
+    p_ph_tbl = doc.add_paragraph()
+    r_ph_tbl = p_ph_tbl.add_run("Table 4.1A: pH Fuzzification Sets (UoD: [0.0, 14.0] | WHO Safe Range: 6.5 – 8.5)")
+    set_run_font(r_ph_tbl, size=10, bold=True, color=COLOR_NAVY)
+    
+    ph_mf_headers = ["Linguistic Set", "Function Geometry", "Coordinates [a, b, c, d]", "WHO / BIS Rationale"]
+    ph_mf_widths = [Inches(1.8), Inches(1.3), Inches(1.7), Inches(2.2)]
+    ph_mf_data = [
+        ["ACIDIC", "Trapezoidal", "[0.0, 0.0, 5.0, 6.5]", "Corrosive; dissolves lead/copper plumbing (<6.5)."],
+        ["SLIGHTLY_ACIDIC", "Triangular", "[5.5, 6.5, 7.2]", "Natural soft water/spring transition zone (peak 6.5)."],
+        ["NEUTRAL", "Triangular", "[6.5, 7.0, 7.8]", "Optimal physiological equilibrium (peak 7.0)."],
+        ["SLIGHTLY_ALKALINE", "Triangular", "[7.2, 8.0, 8.8]", "Permissible mineral groundwater (peak 8.0)."],
+        ["ALKALINE", "Trapezoidal", "[8.2, 9.0, 14.0, 14.0]", "Caustic; scaling, bitter taste, mucosal irritation (>8.5)."]
+    ]
+    t_ph_mf = doc.add_table(rows=len(ph_mf_data) + 1, cols=len(ph_mf_headers))
+    style_table(t_ph_mf, ph_mf_widths, ph_mf_headers, ph_mf_data)
+
+    doc.add_paragraph().paragraph_format.space_after = Pt(4)
+
+    # Table: Turbidity Sets
+    p_tb_tbl = doc.add_paragraph()
+    r_tb_tbl = p_tb_tbl.add_run("Table 4.1B: Turbidity Fuzzification Sets (UoD: [0.0, 100.0 NTU] | WHO: <1 NTU, BIS: <5 NTU)")
+    set_run_font(r_tb_tbl, size=10, bold=True, color=COLOR_NAVY)
+
+    tb_mf_headers = ["Linguistic Set", "Function Geometry", "Coordinates [a, b, c, d]", "WHO / BIS Rationale"]
+    tb_mf_widths = [Inches(1.8), Inches(1.3), Inches(1.7), Inches(2.2)]
+    tb_mf_data = [
+        ["CLEAR", "Trapezoidal", "[0.0, 0.0, 1.0, 5.0]", "Optimal clear water adhering to WHO (<1) & BIS (<5)."],
+        ["SLIGHTLY_TURBID", "Triangular", "[2.0, 10.0, 25.0]", "Visible cloudiness; domestic filtration recommended."],
+        ["TURBID", "Triangular", "[15.0, 40.0, 70.0]", "High particulate matter; shields microbes from disinfection."],
+        ["VERY_TURBID", "Trapezoidal", "[50.0, 75.0, 100.0, 100.0]", "Acute contamination runoff; critical hazard (>50 NTU)."]
+    ]
+    t_tb_mf = doc.add_table(rows=len(tb_mf_data) + 1, cols=len(tb_mf_headers))
+    style_table(t_tb_mf, tb_mf_widths, tb_mf_headers, tb_mf_data)
+
+    doc.add_paragraph().paragraph_format.space_after = Pt(4)
+
+    # Table: TDS Sets
+    p_tds_tbl = doc.add_paragraph()
+    r_tds_tbl = p_tds_tbl.add_run("Table 4.1C: Total Dissolved Solids (TDS) Sets (UoD: [0.0, 1500.0 mg/L] | BIS Desirable: <500 mg/L)")
+    set_run_font(r_tds_tbl, size=10, bold=True, color=COLOR_NAVY)
+
+    tds_mf_headers = ["Linguistic Set", "Function Geometry", "Coordinates [a, b, c, d]", "WHO / BIS Rationale"]
+    tds_mf_widths = [Inches(1.8), Inches(1.3), Inches(1.7), Inches(2.2)]
+    tds_mf_data = [
+        ["PURE", "Trapezoidal", "[0.0, 0.0, 100.0, 300.0]", "Low mineral RO / distilled water (<300 mg/L)."],
+        ["ACCEPTABLE", "Triangular", "[150.0, 350.0, 550.0]", "Palatable balanced mineral water adhering to BIS limit."],
+        ["HIGH", "Triangular", "[450.0, 650.0, 900.0]", "Hard water; high mineral salts, scale-forming."],
+        ["VERY_HIGH", "Trapezoidal", "[750.0, 1000.0, 1500.0, 1500.0]", "Excessive mineralization/salinity hazard (>1000 mg/L)."]
+    ]
+    t_tds_mf = doc.add_table(rows=len(tds_mf_data) + 1, cols=len(tds_mf_headers))
+    style_table(t_tds_mf, tds_mf_widths, tds_mf_headers, tds_mf_data)
+
+    doc.add_paragraph().paragraph_format.space_after = Pt(4)
+
+    # Table: DO Sets
+    p_do_tbl = doc.add_paragraph()
+    r_do_tbl = p_do_tbl.add_run("Table 4.1D: Dissolved Oxygen (DO) Sets (UoD: [0.0, 20.0 mg/L] | Healthy Baseline: >6.0 mg/L)")
+    set_run_font(r_do_tbl, size=10, bold=True, color=COLOR_NAVY)
+
+    do_mf_headers = ["Linguistic Set", "Function Geometry", "Coordinates [a, b, c, d]", "WHO / BIS Rationale"]
+    do_mf_widths = [Inches(1.8), Inches(1.3), Inches(1.7), Inches(2.2)]
+    do_mf_data = [
+        ["VERY_LOW", "Trapezoidal", "[0.0, 0.0, 2.0, 4.0]", "Hypoxic / septic condition; microbial pathogen risk (<2.0)."],
+        ["LOW", "Triangular", "[3.0, 5.0, 7.5]", "Stagnant or biologically depleted water."],
+        ["ACCEPTABLE", "Triangular", "[6.0, 8.5, 11.0]", "Normal well-aerated fresh drinking water (peak 8.5)."],
+        ["HIGH", "Trapezoidal", "[9.0, 11.0, 20.0, 20.0]", "Highly oxygenated cold stream or aerated spring."]
+    ]
+    t_do_mf = doc.add_table(rows=len(do_mf_data) + 1, cols=len(do_mf_headers))
+    style_table(t_do_mf, do_mf_widths, do_mf_headers, do_mf_data)
+
+    doc.add_paragraph().paragraph_format.space_after = Pt(4)
+
+    # Table: Output WPI Sets
+    p_wpi_tbl = doc.add_paragraph()
+    r_wpi_tbl = p_wpi_tbl.add_run("Table 4.1E: Water Potability Index (WPI) Output Sets (UoD: [0.0, 10.0] | CoA Defuzzification)")
+    set_run_font(r_wpi_tbl, size=10, bold=True, color=COLOR_NAVY)
+
+    wpi_mf_headers = ["Output Set", "Geometry", "Coordinates [a, b, c, d]", "WPI Score Range", "Actionable Verdict"]
+    wpi_mf_widths = [Inches(1.5), Inches(1.2), Inches(1.6), Inches(1.2), Inches(1.5)]
+    wpi_mf_data = [
+        ["NON_POTABLE", "Trapezoidal", "[0.0, 0.0, 2.0, 3.5]", "0.0 ≤ WPI < 3.5", "Unsafe: Immediate boil order."],
+        ["MARGINAL", "Triangular", "[3.0, 5.0, 7.0]", "3.5 ≤ WPI < 6.5", "Caution: Filtration advised."],
+        ["POTABLE", "Trapezoidal", "[6.5, 8.0, 10.0, 10.0]", "6.5 ≤ WPI ≤ 10.0", "Safe: Meets all WHO/BIS standards."]
+    ]
+    t_wpi_mf = doc.add_table(rows=len(wpi_mf_data) + 1, cols=len(wpi_mf_headers))
+    style_table(t_wpi_mf, wpi_mf_widths, wpi_mf_headers, wpi_mf_data)
+
+    doc.add_paragraph().paragraph_format.space_after = Pt(8)
+
+    # 4.2 Expert Rule Base
+    add_heading(doc, "4.2 Expert Knowledge Rule Base", level=2)
     add_paragraph(doc,
         "The rule base comprises 45 expert rules formulated in accordance with international medical and environmental specifications. "
         "Importantly, 15 rules serve as 'Critical Safety Vetoes'—if any individual parameter breaches lethal boundaries (e.g., pH < 5.0, "
@@ -390,9 +490,16 @@ def generate_document():
 
     output_file = "outputs/Pre_Final_Draft_Project_Report.docx"
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
-    doc.save(output_file)
-    print(f"[+] Successfully generated Word Document: {output_file}")
+    try:
+        doc.save(output_file)
+        print(f"[+] Successfully generated Word Document: {output_file}")
+    except PermissionError:
+        fallback_file = "outputs/Pre_Final_Draft_Project_Report_v2.docx"
+        doc.save(fallback_file)
+        print(f"[!] Warning: {output_file} is currently open in Microsoft Word and locked.")
+        print(f"[+] Saved updated report to fallback: {fallback_file}")
 
 
 if __name__ == "__main__":
     generate_document()
+

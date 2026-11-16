@@ -179,42 +179,55 @@ The Mamdani FIS maps four input domains and one output domain across finely disc
 | **Dissolved Oxygen** | $x_4$ | $[0.0, 20.0\text{ mg/L}]$ | 0.01 | 2,001 | `VERY_LOW`, `LOW`, `ACCEPTABLE`, `HIGH` |
 | **WPI (Output)** | $y$ | $[0.0, 10.0]$ | 0.01 | 1,001 | `NON_POTABLE`, `MARGINAL`, `POTABLE` |
 
-### 5.2 Membership Function Formulations
-Membership functions are modeled using piecewise linear triangular ($\text{trimf}$) and trapezoidal ($\text{trapmf}$) distributions:
+### 5.2 Membership Function Formulations & Fuzzification Sets
+Membership functions map continuous crisp physical measurements into graded degrees of truth $\mu \in [0.0, 1.0]$. Piecewise linear triangular ($\text{trimf}$) and trapezoidal ($\text{trapmf}$) distributions are utilized to balance smooth boundary modeling with microsecond-level computational efficiency on edge microcontrollers:
 
 $$\text{trimf}(x; a, b, c) = \max\left(0, \min\left(\frac{x - a}{b - a}, \frac{c - x}{c - b}\right)\right)$$
 
 $$\text{trapmf}(x; a, b, c, d) = \max\left(0, \min\left(\frac{x - a}{b - a}, 1, \frac{d - x}{d - c}\right)\right)$$
 
-#### A. pH Membership Functions (Grounded in WHO 6.5–8.5 Safe Envelope)
-* $\mu_{\text{ACIDIC}}(x) = \text{trapmf}(x; 0.0, 0.0, 5.0, 6.5)$
-* $\mu_{\text{SLIGHTLY\_ACIDIC}}(x) = \text{trimf}(x; 5.5, 6.5, 7.2)$
-* $\mu_{\text{NEUTRAL}}(x) = \text{trimf}(x; 6.5, 7.0, 7.8)$
-* $\mu_{\text{SLIGHTLY\_ALKALINE}}(x) = \text{trimf}(x; 7.2, 8.0, 8.8)$
-* $\mu_{\text{ALKALINE}}(x) = \text{trapmf}(x; 8.2, 9.0, 14.0, 14.0)$
+* **Boundary Shoulder Modeling (Trapezoidal):** The extreme left and right linguistic terms for every parameter use trapezoidal functions. This guarantees saturation at $\mu = 1.0$ across hazardous extremes (e.g., pH $0.0 - 5.0$ remains strictly `ACIDIC`, and Turbidity $> 50\text{ NTU}$ remains strictly `VERY_TURBID`).
+* **Inter-Class Transition Modeling (Triangular):** Interior terms utilize triangular functions that overlap with adjacent terms at the $\mu = 0.5$ crossover point, ensuring continuous coverage (partition of unity) with no dead zones across the entire physical universe.
 
-#### B. Turbidity Membership Functions (WHO Ideal <1 NTU, BIS <5 NTU)
-* $\mu_{\text{CLEAR}}(x) = \text{trapmf}(x; 0.0, 0.0, 1.0, 5.0)$
-* $\mu_{\text{SLIGHTLY\_TURBID}}(x) = \text{trimf}(x; 2.0, 10.0, 25.0)$
-* $\mu_{\text{TURBID}}(x) = \text{trimf}(x; 15.0, 40.0, 70.0)$
-* $\mu_{\text{VERY\_TURBID}}(x) = \text{trapmf}(x; 50.0, 75.0, 100.0, 100.0)$
+#### Table 5.2A: pH Fuzzification Sets (UoD: $[0.0, 14.0]$ | WHO Safe Range: $6.5 - 8.5$)
+| Linguistic Term | Function Geometry | Parameter Coordinates $[a, b, c, d]$ | Regulatory / Physical Rationale |
+| :--- | :---: | :---: | :--- |
+| `ACIDIC` | Trapezoidal | $[0.0, 0.0, 5.0, 6.5]$ | Corrosive water; leaches toxic heavy metals (lead, copper) from pipes. |
+| `SLIGHTLY_ACIDIC` | Triangular | $[5.5, 6.5, 7.2]$ | Typical natural rainwater/soft surface water; transition zone (peak $6.5$). |
+| `NEUTRAL` | Triangular | $[6.5, 7.0, 7.8]$ | Optimal drinking water physiological equilibrium (peak $7.0$). |
+| `SLIGHTLY_ALKALINE`| Triangular | $[7.2, 8.0, 8.8]$ | Mineral-rich groundwater permissible under BIS IS 10500 (peak $8.0$). |
+| `ALKALINE` | Trapezoidal | $[8.2, 9.0, 14.0, 14.0]$ | Highly alkaline; caustic taste, mineral scaling, eye/mucous irritation. |
 
-#### C. Total Dissolved Solids Membership Functions (BIS 500 mg/L Desirable)
-* $\mu_{\text{PURE}}(x) = \text{trapmf}(x; 0.0, 0.0, 100.0, 300.0)$
-* $\mu_{\text{ACCEPTABLE}}(x) = \text{trimf}(x; 150.0, 350.0, 550.0)$
-* $\mu_{\text{HIGH}}(x) = \text{trimf}(x; 450.0, 650.0, 900.0)$
-* $\mu_{\text{VERY\_HIGH}}(x) = \text{trapmf}(x; 750.0, 1000.0, 1500.0, 1500.0)$
+#### Table 5.2B: Turbidity Fuzzification Sets (UoD: $[0.0, 100.0\text{ NTU}]$ | WHO Ideal: $<1.0\text{ NTU}$, BIS: $<5.0\text{ NTU}$)
+| Linguistic Term | Function Geometry | Parameter Coordinates $[a, b, c, d]$ | Regulatory / Physical Rationale |
+| :--- | :---: | :---: | :--- |
+| `CLEAR` | Trapezoidal | $[0.0, 0.0, 1.0, 5.0]$ | Safe, aesthetically clear drinking water satisfying WHO ($<1$) & BIS ($<5$). |
+| `SLIGHTLY_TURBID` | Triangular | $[2.0, 10.0, 25.0]$ | Visual cloudiness; domestic filtration or chlorination recommended. |
+| `TURBID` | Triangular | $[15.0, 40.0, 70.0]$ | High colloidal organic matter; significantly shields pathogens from UV/chlorine. |
+| `VERY_TURBID` | Trapezoidal | $[50.0, 75.0, 100.0, 100.0]$ | Heavy surface runoff or industrial discharge; acute microbial safety hazard. |
 
-#### D. Dissolved Oxygen Membership Functions (Aquatic Threshold >6 mg/L)
-* $\mu_{\text{VERY\_LOW}}(x) = \text{trapmf}(x; 0.0, 0.0, 2.0, 4.0)$
-* $\mu_{\text{LOW}}(x) = \text{trimf}(x; 3.0, 5.0, 7.5)$
-* $\mu_{\text{ACCEPTABLE}}(x) = \text{trimf}(x; 6.0, 8.5, 11.0)$
-* $\mu_{\text{HIGH}}(x) = \text{trapmf}(x; 9.0, 11.0, 20.0, 20.0)$
+#### Table 5.2C: Total Dissolved Solids (TDS) Fuzzification Sets (UoD: $[0.0, 1500.0\text{ mg/L}]$ | BIS Desirable: $<500\text{ mg/L}$)
+| Linguistic Term | Function Geometry | Parameter Coordinates $[a, b, c, d]$ | Regulatory / Physical Rationale |
+| :--- | :---: | :---: | :--- |
+| `PURE` | Trapezoidal | $[0.0, 0.0, 100.0, 300.0]$ | Low-mineralization Reverse Osmosis (RO) or alpine glacial water. |
+| `ACCEPTABLE` | Triangular | $[150.0, 350.0, 550.0]$ | Palatable, balanced mineral drinking water meeting BIS desirable limit. |
+| `HIGH` | Triangular | $[450.0, 650.0, 900.0]$ | Hard mineral water; noticeable brackish taste and appliance scaling. |
+| `VERY_HIGH` | Trapezoidal | $[750.0, 1000.0, 1500.0, 1500.0]$ | Severe salinity or industrial mineral contamination; gastrointestinal distress. |
 
-#### E. Water Potability Index (WPI) Output Membership Functions
-* $\mu_{\text{NON\_POTABLE}}(y) = \text{trapmf}(y; 0.0, 0.0, 2.0, 3.5)$
-* $\mu_{\text{MARGINAL}}(y) = \text{trimf}(y; 3.0, 5.0, 7.0)$
-* $\mu_{\text{POTABLE}}(y) = \text{trapmf}(y; 6.5, 8.0, 10.0, 10.0)$
+#### Table 5.2D: Dissolved Oxygen (DO) Fuzzification Sets (UoD: $[0.0, 20.0\text{ mg/L}]$ | Biological Baseline: $>6.0\text{ mg/L}$)
+| Linguistic Term | Function Geometry | Parameter Coordinates $[a, b, c, d]$ | Regulatory / Physical Rationale |
+| :--- | :---: | :---: | :--- |
+| `VERY_LOW` | Trapezoidal | $[0.0, 0.0, 2.0, 4.0]$ | Hypoxic / septic conditions; active anaerobic decomposition and pathogen proliferation. |
+| `LOW` | Triangular | $[3.0, 5.0, 7.5]$ | Stagnant or biologically stressed water ($3.0 - 7.5\text{ mg/L}$). |
+| `ACCEPTABLE` | Triangular | $[6.0, 8.5, 11.0]$ | Well-aerated, healthy natural freshwater ($8.5\text{ mg/L}$ saturation). |
+| `HIGH` | Trapezoidal | $[9.0, 11.0, 20.0, 20.0]$ | Highly oxygenated cold mountain stream or artificial aeration. |
+
+#### Table 5.2E: Water Potability Index (WPI) Output Sets (UoD: $[0.0, 10.0]$ | Defuzzification: Centroid of Area)
+| Output Linguistic Set | Function Geometry | Parameter Coordinates $[a, b, c, d]$ | WPI Crisp Score Range | Actionable Safety Verdict |
+| :--- | :---: | :---: | :---: | :--- |
+| `NON_POTABLE` | Trapezoidal | $[0.0, 0.0, 2.0, 3.5]$ | $0.0 \le \text{WPI} < 3.5$ | 🔴 **Unsafe:** High health risk. Immediate boil/remediation order. |
+| `MARGINAL` | Triangular | $[3.0, 5.0, 7.0]$ | $3.5 \le \text{WPI} < 6.5$ | 🟡 **Caution:** Filtration/treatment strongly advised before use. |
+| `POTABLE` | Trapezoidal | $[6.5, 8.0, 10.0, 10.0]$ | $6.5 \le \text{WPI} \le 10.0$ | 🟢 **Safe:** Meets all WHO & BIS IS 10500 drinking standards. |
 
 ---
 
@@ -485,3 +498,4 @@ By grounding 45 expert rules in WHO (2022) and BIS IS 10500:2012 standards, the 
 6. Benson, B. B., & Krause, D. (1984). The concentration and isotopic fractionation of oxygen dissolved in freshwater and seawater in equilibrium with the atmosphere. *Limnology and Oceanography*, 29(3), 620–632.
 7. DFRobot. (2023). *Gravity: Analog pH Sensor / Meter Pro Kit V2 (SKU: SEN0161) Technical Documentation & Datasheet*.
 8. DFRobot. (2023). *Gravity: Analog Dissolved Oxygen Sensor (SKU: SEN0237) User Manual*.
+
